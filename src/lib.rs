@@ -98,12 +98,41 @@ impl Emulator {
         self.pc += 2;
     }
 
+    fn set_pc(&mut self, address: u16) {
+        if address >= RAM_SIZE as u16 {
+            panic!("Program counter out of bounds");
+        }
+        self.pc = address;
+    }
+
     pub fn reset(&mut self) {
         *self = Emulator::new();
     }
 
     pub fn tick(&mut self) {
         let op = self.fetch();
+
+        self.execute(op);
+    }
+
+    fn execute(&mut self, op: u16) {
+        let (x, y, n, nn) = self.extract_instruction_parameters(op);
+
+        match (x, y, n, nn) {
+            (0, 0, 0, 0) => return,
+            (0, 0, 0xE, 0) => self.clear_screen(),
+            (0, 0, 0xE, 1) => self.return_from_subroutine(),
+            (1, _, _, _) => self.set_pc((op & 0x0FFF) as u16),
+
+            (_, _, _, _) => unimplemented!("This instruction is not implemented yet: {:#04x}", op),
+        }
+    }
+    fn extract_instruction_parameters(&self, op: u16) -> (usize, usize, u8, u8) {
+        let x = ((op & 0x0F00) >> 8) as usize;
+        let y = ((op & 0x00F0) >> 4) as usize;
+        let n = (op & 0x000F) as u8;
+        let nn = (op & 0x00FF) as u8;
+        (x, y, n, nn)
     }
 
     fn fetch(&mut self) -> u16 {
@@ -112,5 +141,27 @@ impl Emulator {
         let op = (high_byte << 8) | low_byte;
         self.increment_pc();
         op
+    }
+
+    pub fn tick_timer(&mut self) {
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer > 0 {
+            if self.sound_timer == 1 {
+                //make sound
+            }
+            self.sound_timer -= 1;
+        }
+    }
+
+    fn clear_screen(&mut self) {
+        self.screen = [false; SCREEN_WIDTH * SCREEN_HEIGHT];
+    }
+
+    fn return_from_subroutine(&mut self) {
+        let return_address = self.pop_from_stack();
+        self.set_pc(return_address);
     }
 }
