@@ -25,6 +25,7 @@ const RAM_SIZE: usize = 4096;
 const REGISTERS_QUANTITY: usize = 16;
 const STACK_SIZE: usize = 16;
 const KEYS_QUANTITY: usize = 16;
+const IS_COSMAC_MODE: bool = false;
 
 pub struct Emulator {
     pc: u16,
@@ -75,6 +76,18 @@ impl Emulator {
         self.ram[address as usize] = value;
     }
 
+    fn read_registry(&mut self, index: usize) -> u8 {
+        self.registers[index]
+    }
+
+    fn write_to_registry(&mut self, index: usize, value: u8) {
+        self.registers[index] = value;
+    }
+
+    fn add_value_to_registry(&mut self, index: usize, value: u8) {
+        self.registers[index] = self.registers[index].wrapping_add(value);
+    }
+
     pub fn push_to_stack(&mut self, value: u16) {
         if self.stack_pointer >= STACK_SIZE as u16 {
             panic!("Stack overflow when pushing to stack");
@@ -116,23 +129,99 @@ impl Emulator {
     }
 
     fn execute(&mut self, op: u16) {
-        let (x, y, n, nn) = self.extract_instruction_parameters(op);
+        let (x, y, n, nn, nnn) = self.extract_instruction_parameters(op);
 
         match (x, y, n, nn) {
             (0, 0, 0, 0) => return,
+
             (0, 0, 0xE, 0) => self.clear_screen(),
-            (0, 0, 0xE, 1) => self.return_from_subroutine(),
-            (1, _, _, _) => self.set_pc((op & 0x0FFF) as u16),
+
+            (0, 0, 0xE, 0xE) => self.return_from_subroutine(),
+
+            (1, _, _, _) => self.set_pc(nnn),
+
+            (2, _, _, _) => self.call_subroutine(nnn),
+
+            (3, _, _, _) => {
+                if self.read_registry(x) == nn {
+                    self.increment_pc();
+                }
+            }
+
+            (4, _, _, _) => {
+                if self.read_registry(x) != nn {
+                    self.increment_pc();
+                }
+            }
+
+            (5, _, _, 0) => {
+                if self.read_registry(x) == self.read_registry(y) {
+                    self.increment_pc();
+                }
+            }
+
+            (9, _, _, 0) => {
+                if self.read_registry(x) != self.read_registry(y) {
+                    self.increment_pc();
+                }
+            }
+
+            (6, _, _, _) => self.write_to_registry(x, nn),
+
+            (7, _, _, _) => self.add_value_to_registry(x, nn),
+
+            (8, _, _, 0) => {
+                let y_value = self.read_registry(y);
+                self.write_to_registry(x, y_value)
+            }
+
+            (8, _, _, 1) => {
+                let or_value = self.read_registry(x) | self.read_registry(y);
+                self.write_to_registry(x, or_value);
+            }
+
+            (8, _, _, 2) => {
+                let and_value = self.read_registry(x) & self.read_registry(y);
+                self.write_to_registry(x, and_value);
+            }
+
+            (8, _, _, 3) => {
+                let or_value = self.read_registry(x) ^ self.read_registry(y);
+                self.write_to_registry(x, or_value);
+            }
+
+            (8, _, _, 4) => {
+                let (x_value, carry) = self.read_registry(x).overflowing_add(self.read_registry(y));
+                self.write_to_registry(x, x_value);
+                self.write_to_registry(0xF, if carry { 1 } else { 0 });
+            }
+
+            (8, _, _, 5) => {
+                let (x_value, borrow) =
+                    self.read_registry(x).overflowing_sub(self.read_registry(y));
+                self.write_to_registry(x, x_value);
+                self.write_to_registry(0xF, if borrow { 0 } else { 1 });
+            }
+
+            (8, _, _, 6) => {}
+
+            (8, _, _, 7) => {
+                let (x_value, borrow) =
+                    self.read_registry(y).overflowing_sub(self.read_registry(x));
+                self.write_to_registry(x, x_value);
+                self.write_to_registry(0xF, if borrow { 0 } else { 1 });
+            }
 
             (_, _, _, _) => unimplemented!("This instruction is not implemented yet: {:#04x}", op),
         }
     }
-    fn extract_instruction_parameters(&self, op: u16) -> (usize, usize, u8, u8) {
+    fn extract_instruction_parameters(&self, op: u16) -> (usize, usize, u8, u8, u16) {
         let x = ((op & 0x0F00) >> 8) as usize;
         let y = ((op & 0x00F0) >> 4) as usize;
         let n = (op & 0x000F) as u8;
         let nn = (op & 0x00FF) as u8;
-        (x, y, n, nn)
+        let nnn = (op & 0x0FFF) as u16;
+        (x, y, n, nn, nnn)
     }
 
     fn fetch(&mut self) -> u16 {
@@ -163,5 +252,10 @@ impl Emulator {
     fn return_from_subroutine(&mut self) {
         let return_address = self.pop_from_stack();
         self.set_pc(return_address);
+    }
+
+    fn call_subroutine(&mut self, address: u16) {
+        self.push_to_stack(self.pc);
+        self.set_pc(address);
     }
 }
