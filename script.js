@@ -13,6 +13,7 @@ class Chip8Emulator {
     this.keys = new Uint8Array(16)
     this.running = false
     this.speed = 5
+    this.romLoaded = false
 
     this.loadFontset()
   }
@@ -110,7 +111,16 @@ class Chip8Emulator {
     for (let i = 0; i < romData.length; i++) {
       this.memory[0x200 + i] = romData[i]
     }
-    this.reset()
+    // Don't reset PC - just clear other state
+    this.sp = 0
+    this.i = 0
+    this.delayTimer = 0
+    this.soundTimer = 0
+    this.registers.fill(0)
+    this.screen.fill(0)
+    this.keys.fill(0)
+    // PC stays at 0x200 (where ROM starts)
+    this.romLoaded = true
   }
 
   reset() {
@@ -122,6 +132,7 @@ class Chip8Emulator {
     this.registers.fill(0)
     this.screen.fill(0)
     this.keys.fill(0)
+    this.romLoaded = false
   }
 
   step() {
@@ -473,14 +484,14 @@ function loadROM() {
 
 function start() {
   console.log('Start button clicked!')
-
+  
   // Check if a ROM is loaded
-  if (emulator.pc === 0x200) {
+  if (!emulator.romLoaded) {
     console.log('No ROM loaded! Please load a ROM first.')
     alert('Please load a ROM first before starting the emulator.')
     return
   }
-
+  
   if (!emulator.running) {
     emulator.running = true
     console.log('Starting emulator...')
