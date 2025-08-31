@@ -128,11 +128,14 @@ class Chip8Emulator {
     if (!this.running) return
 
     const opcode = (this.memory[this.pc] << 8) | this.memory[this.pc + 1]
-    console.log(
-      `Step: PC=${this.pc.toString(16).padStart(4, '0')}, Opcode=0x${opcode
-        .toString(16)
-        .padStart(4, '0')}`
-    )
+    // Only log first few steps to avoid console spam
+    if (this.pc < 0x220) {
+      console.log(
+        `Step: PC=${this.pc.toString(16).padStart(4, '0')}, Opcode=0x${opcode
+          .toString(16)
+          .padStart(4, '0')}`
+      )
+    }
 
     this.execute(opcode)
     this.pc += 2
@@ -148,11 +151,14 @@ class Chip8Emulator {
     const nn = opcode & 0x00ff
     const nnn = opcode & 0x0fff
 
-    console.log(
-      `Executing opcode: 0x${opcode.toString(16).padStart(4, '0')} at PC: 0x${this.pc
-        .toString(16)
-        .padStart(4, '0')}`
-    )
+    // Only log first few executions to avoid console spam
+    if (this.pc < 0x220) {
+      console.log(
+        `Executing opcode: 0x${opcode.toString(16).padStart(4, '0')} at PC: 0x${this.pc
+          .toString(16)
+          .padStart(4, '0')}`
+      )
+    }
 
     switch (opcode & 0xf000) {
       case 0x0000:
@@ -396,13 +402,13 @@ let lastTime = 0
 
 function init() {
   console.log('Initializing Chip-8 Emulator...')
-  
+
   // Check if ROM variables are available
   console.log('ROM variables check:')
   console.log('MAZE_ROM:', typeof MAZE_ROM !== 'undefined' ? 'Available' : 'Missing')
   console.log('PONG_ROM:', typeof PONG_ROM !== 'undefined' ? 'Available' : 'Missing')
   console.log('TETRIS_ROM:', typeof TETRIS_ROM !== 'undefined' ? 'Available' : 'Missing')
-  
+
   emulator = new Chip8Emulator()
   console.log('Emulator created:', emulator)
 
@@ -412,7 +418,7 @@ function init() {
 
   setupEventListeners()
   render()
-  
+
   console.log('Initialization complete!')
   console.log('Available ROMs:', Object.keys(ROMS))
   console.log('ROMS object:', ROMS)
@@ -536,7 +542,10 @@ function render() {
   }
 
   ctx.putImageData(imageData, 0, 0)
-  console.log('Rendered frame')
+  // Only log first few renders to avoid console spam
+  if (emulator.pc < 0x220) {
+    console.log('Rendered frame')
+  }
 }
 
 function handleKeyDown(event) {

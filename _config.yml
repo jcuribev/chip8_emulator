@@ -1,8 +1,8 @@
 # Jekyll configuration for GitHub Pages
 title: Chip-8 Emulator
 description: A web-based Chip-8 emulator that runs classic games from the 1970s
-url: "https://jcuribev.github.io"
-baseurl: "/chip8_emulator"
+url: 'https://jcuribev.github.io'
+baseurl: '/chip8_emulator'
 
 # Build settings
 plugins:
