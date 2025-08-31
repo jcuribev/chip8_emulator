@@ -15,6 +15,7 @@ class Chip8Emulator {
     this.speed = 5
     this.romLoaded = false
 
+    console.log('Chip8Emulator constructor - romLoaded:', this.romLoaded)
     this.loadFontset()
   }
 
@@ -108,9 +109,21 @@ class Chip8Emulator {
   }
 
   loadROM(romData) {
+    console.log('Chip8Emulator.loadROM called with data length:', romData.length)
+    console.log('Before loading - romLoaded:', this.romLoaded)
+    console.log('ROM data first few bytes:', romData.slice(0, 10))
+
     for (let i = 0; i < romData.length; i++) {
       this.memory[0x200 + i] = romData[i]
     }
+
+    // Verify the data was written correctly
+    console.log('Memory verification - first few bytes at 0x200:')
+    console.log('Memory[0x200]:', this.memory[0x200])
+    console.log('Memory[0x201]:', this.memory[0x201])
+    console.log('Memory[0x202]:', this.memory[0x202])
+    console.log('Memory[0x203]:', this.memory[0x203])
+
     // Don't reset PC - just clear other state
     this.sp = 0
     this.i = 0
@@ -121,6 +134,10 @@ class Chip8Emulator {
     this.keys.fill(0)
     // PC stays at 0x200 (where ROM starts)
     this.romLoaded = true
+
+    console.log('After loading - romLoaded:', this.romLoaded)
+    console.log('After loading - PC:', this.pc)
+    console.log('First opcode will be:', (this.memory[this.pc] << 8) | this.memory[this.pc + 1])
   }
 
   reset() {
@@ -139,14 +156,18 @@ class Chip8Emulator {
     if (!this.running) return
 
     const opcode = (this.memory[this.pc] << 8) | this.memory[this.pc + 1]
-    // Only log first few steps to avoid console spam
-    if (this.pc < 0x220) {
-      console.log(
-        `Step: PC=${this.pc.toString(16).padStart(4, '0')}, Opcode=0x${opcode
-          .toString(16)
-          .padStart(4, '0')}`
-      )
-    }
+    console.log(
+      `Step: PC=${this.pc.toString(16).padStart(4, '0')}, Opcode=0x${opcode
+        .toString(16)
+        .padStart(4, '0')}`
+    )
+    console.log(
+      `Memory at PC: 0x${this.memory[this.pc].toString(16).padStart(2, '0')} 0x${this.memory[
+        this.pc + 1
+      ]
+        .toString(16)
+        .padStart(2, '0')}`
+    )
 
     this.execute(opcode)
     this.pc += 2
@@ -422,17 +443,29 @@ function init() {
 
   emulator = new Chip8Emulator()
   console.log('Emulator created:', emulator)
+  console.log('Global emulator variable romLoaded:', emulator.romLoaded)
 
   canvas = document.getElementById('screen')
+  // Set canvas size to 1280x640 (20x scale of 64x32) for crisp scaling
+  canvas.width = 1280
+  canvas.height = 640
   ctx = canvas.getContext('2d')
   console.log('Canvas context:', ctx)
+  console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
 
   setupEventListeners()
-  render()
+  // Don't render during init - wait for ROM to be loaded
+
+  // Handle window resize for responsive canvas
+  window.addEventListener('resize', handleResize)
+
+  // Test render to verify canvas is working
+  testCanvas()
 
   console.log('Initialization complete!')
   console.log('Available ROMs:', Object.keys(ROMS))
   console.log('ROMS object:', ROMS)
+  console.log('Final emulator.romLoaded:', emulator.romLoaded)
 }
 
 function setupEventListeners() {
@@ -476,6 +509,13 @@ function loadROM() {
   if (selectedROM && ROMS[selectedROM] && ROMS[selectedROM].length > 0) {
     emulator.loadROM(ROMS[selectedROM])
     console.log(`Loaded ${selectedROM} ROM with ${ROMS[selectedROM].length} bytes`)
+    console.log('After loading - emulator.romLoaded:', emulator.romLoaded)
+    console.log('After loading - emulator.pc:', emulator.pc)
+
+    // Test: Check if ROM data is actually in memory
+    console.log('Memory at 0x200:', emulator.memory[0x200])
+    console.log('Memory at 0x201:', emulator.memory[0x201])
+    console.log('Memory at 0x202:', emulator.memory[0x202])
   } else {
     console.error(`Failed to load ROM: ${selectedROM}`)
     alert(`Failed to load ROM: ${selectedROM}. Check console for details.`)
@@ -484,14 +524,30 @@ function loadROM() {
 
 function start() {
   console.log('Start button clicked!')
-  
+  console.log('Emulator object:', emulator)
+  console.log('Emulator romLoaded flag:', emulator.romLoaded)
+  console.log('Emulator PC:', emulator.pc)
+
+  // Test: Check if ROM data is actually in memory
+  console.log('Memory at 0x200:', emulator.memory[0x200])
+  console.log('Memory at 0x201:', emulator.memory[0x201])
+  console.log('Memory at 0x202:', emulator.memory[0x202])
+
   // Check if a ROM is loaded
   if (!emulator.romLoaded) {
     console.log('No ROM loaded! Please load a ROM first.')
-    alert('Please load a ROM first before starting the emulator.')
-    return
+    console.log('But let me check if ROM data is actually in memory...')
+
+    // Temporary bypass for testing
+    if (emulator.memory[0x200] !== 0) {
+      console.log('ROM data found in memory! Bypassing flag check...')
+      emulator.romLoaded = true
+    } else {
+      alert('Please load a ROM first before starting the emulator.')
+      return
+    }
   }
-  
+
   if (!emulator.running) {
     emulator.running = true
     console.log('Starting emulator...')
@@ -541,18 +597,38 @@ function gameLoop(currentTime = 0) {
 
 function render() {
   const screen = emulator.getScreen()
-  const imageData = ctx.createImageData(64, 32)
 
-  for (let i = 0; i < screen.length; i++) {
-    const pixel = screen[i] ? 255 : 0
-    const index = i * 4
-    imageData.data[index] = pixel // R
-    imageData.data[index + 1] = pixel // G
-    imageData.data[index + 2] = pixel // B
-    imageData.data[index + 3] = 255 // A
+  // Get current canvas dimensions
+  const canvasWidth = canvas.width
+  const canvasHeight = canvas.height
+
+  // Calculate scale factor
+  const scaleX = canvasWidth / 64
+  const scaleY = canvasHeight / 32
+
+  // Clear the canvas first
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+  // Draw each pixel scaled appropriately
+  for (let y = 0; y < 32; y++) {
+    for (let x = 0; x < 64; x++) {
+      const index = y * 64 + x
+      const pixel = screen[index]
+
+      if (pixel) {
+        ctx.fillStyle = '#fff'
+        // Scale each pixel to the appropriate size
+        ctx.fillRect(
+          Math.floor(x * scaleX),
+          Math.floor(y * scaleY),
+          Math.ceil(scaleX),
+          Math.ceil(scaleY)
+        )
+      }
+    }
   }
 
-  ctx.putImageData(imageData, 0, 0)
   // Only log first few renders to avoid console spam
   if (emulator.pc < 0x220) {
     console.log('Rendered frame')
@@ -618,6 +694,43 @@ function updateKeyVisual(key, pressed) {
   if (keyElement) {
     keyElement.classList.toggle('active', pressed)
   }
+}
+
+function handleResize() {
+  // Get the computed style to see what size CSS is actually applying
+  const computedStyle = window.getComputedStyle(canvas)
+  const cssWidth = parseInt(computedStyle.width)
+  const cssHeight = parseInt(computedStyle.height)
+
+  // Update canvas internal dimensions to match CSS
+  canvas.width = cssWidth
+  canvas.height = cssHeight
+
+  console.log('Canvas resized to:', canvas.width, 'x', canvas.height)
+
+  // Re-render if a ROM is loaded
+  if (emulator && emulator.romLoaded) {
+    render()
+  }
+}
+
+function testCanvas() {
+  // Draw a test pattern to verify canvas is working
+  ctx.fillStyle = '#333'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // Draw a white border
+  ctx.strokeStyle = '#fff'
+  ctx.lineWidth = 4
+  ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4)
+
+  // Draw some test pixels
+  ctx.fillStyle = '#fff'
+  for (let i = 0; i < 10; i++) {
+    ctx.fillRect(i * 20, i * 20, 10, 10)
+  }
+
+  console.log('Test canvas rendered - you should see a gray background with white border and dots')
 }
 
 // Initialize when page loads

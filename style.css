@@ -42,6 +42,9 @@ header p {
 }
 
 #screen {
+  width: 800px;
+  height: 400px;
+  max-width: 100%;
   border: 3px solid #333;
   border-radius: 10px;
   background: #000;
@@ -49,6 +52,21 @@ header p {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  #screen {
+    width: 600px;
+    height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  #screen {
+    width: 400px;
+    height: 200px;
+  }
 }
 
 .controls {
@@ -267,9 +285,9 @@ footer a:hover {
   }
 
   #screen {
-    width: 100%;
-    max-width: 400px;
-    height: auto;
+    width: 600px;
+    height: 300px;
+    max-width: 100%;
   }
 
   .key {
