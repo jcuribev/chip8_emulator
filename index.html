@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chip-8 Emulator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Chip-8 Emulator</h1>
+        <p>A web-based Chip-8 emulator written in Rust</p>
+      </header>
+
+      <main>
+        <div class="emulator-container">
+          <canvas id="screen" width="512" height="256"></canvas>
+
+          <div class="controls">
+            <div class="rom-selector">
+              <label for="rom-select">Select ROM:</label>
+              <select id="rom-select">
+                <option value="">Choose a ROM...</option>
+                <option value="MAZE">MAZE</option>
+                <option value="PONG">PONG</option>
+                <option value="TETRIS">TETRIS</option>
+                <option value="INVADERS">INVADERS</option>
+                <option value="BLINKY">BLINKY</option>
+                <option value="15PUZZLE">15 PUZZLE</option>
+                <option value="CONNECT4">CONNECT 4</option>
+                <option value="GUESS">GUESS</option>
+              </select>
+              <button id="load-rom">Load ROM</button>
+            </div>
+
+            <div class="game-controls">
+              <button id="start">Start</button>
+              <button id="pause">Pause</button>
+              <button id="reset">Reset</button>
+            </div>
+
+            <div class="speed-control">
+              <label for="speed">Speed:</label>
+              <input type="range" id="speed" min="1" max="10" value="5" />
+              <span id="speed-value">5x</span>
+            </div>
+          </div>
+
+          <div class="keyboard">
+            <h3>Controls</h3>
+            <div class="key-grid">
+              <div class="key-row">
+                <div class="key" data-key="1">1</div>
+                <div class="key" data-key="2">2</div>
+                <div class="key" data-key="3">3</div>
+                <div class="key" data-key="C">C</div>
+              </div>
+              <div class="key-row">
+                <div class="key" data-key="4">4</div>
+                <div class="key" data-key="5">5</div>
+                <div class="key" data-key="6">6</div>
+                <div class="key" data-key="D">D</div>
+              </div>
+              <div class="key-row">
+                <div class="key" data-key="7">7</div>
+                <div class="key" data-key="8">8</div>
+                <div class="key" data-key="9">9</div>
+                <div class="key" data-key="E">E</div>
+              </div>
+              <div class="key-row">
+                <div class="key" data-key="A">A</div>
+                <div class="key" data-key="0">0</div>
+                <div class="key" data-key="B">B</div>
+                <div class="key" data-key="F">F</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info">
+          <h3>About</h3>
+          <p>
+            This is a Chip-8 emulator that runs classic games from the 1970s. The emulator is
+            written in JavaScript for web compatibility.
+          </p>
+          <p>
+            <strong>Instructions:</strong> Select a ROM, click Load ROM, then use the Start button
+            to begin. Use the keyboard above or your computer's number keys to control the games.
+          </p>
+        </div>
+      </main>
+
+      <footer>
+        <p>Built with Rust and JavaScript | Chip-8 Emulator</p>
+      </footer>
+    </div>
+
+    <!-- Load ROM data -->
+    <script src="roms/maze.js"></script>
+    <script src="roms/pong.js"></script>
+    <script src="roms/tetris.js"></script>
+    <script src="roms/invaders.js"></script>
+    <script src="roms/blinky.js"></script>
+    <script src="roms/15puzzle.js"></script>
+    <script src="roms/connect4.js"></script>
+    <script src="roms/guess.js"></script>
+
+    <!-- Main emulator script -->
+    <script src="script.js"></script>
+  </body>
+</html>

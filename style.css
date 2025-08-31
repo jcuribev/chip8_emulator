@@ -1,0 +1,280 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.emulator-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+#screen {
+  border: 3px solid #333;
+  border-radius: 10px;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.rom-selector,
+.game-controls,
+.speed-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.rom-selector {
+  flex-direction: row;
+  gap: 15px;
+}
+
+select,
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+select {
+  background: #2a5298;
+  color: white;
+  border: 2px solid #4a7bc8;
+}
+
+button {
+  background: #4a7bc8;
+  color: white;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #5a8bd8;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+#start {
+  background: #28a745;
+}
+#start:hover {
+  background: #34ce57;
+}
+
+#pause {
+  background: #ffc107;
+  color: #000;
+}
+#pause:hover {
+  background: #ffd54f;
+}
+
+#reset {
+  background: #dc3545;
+}
+#reset:hover {
+  background: #e74c3c;
+}
+
+.speed-control {
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+}
+
+#speed {
+  width: 100px;
+  height: 6px;
+  background: #4a7bc8;
+  border-radius: 3px;
+  outline: none;
+}
+
+#speed::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#speed::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.keyboard {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.keyboard h3 {
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.key-grid {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.key-row {
+  display: contents;
+}
+
+.key {
+  width: 50px;
+  height: 50px;
+  background: #2a5298;
+  border: 2px solid #4a7bc8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.key:hover {
+  background: #4a7bc8;
+  transform: scale(1.1);
+}
+
+.key.active {
+  background: #28a745;
+  border-color: #34ce57;
+  transform: scale(0.95);
+}
+
+.info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.info h3 {
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: #4a7bc8;
+}
+
+.info p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.info p:last-child {
+  margin-bottom: 0;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0.8;
+}
+
+footer a {
+  color: #4a7bc8;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .rom-selector {
+    flex-direction: column;
+  }
+
+  #screen {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+  }
+
+  .key {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}
