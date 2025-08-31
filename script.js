@@ -128,6 +128,12 @@ class Chip8Emulator {
     if (!this.running) return
 
     const opcode = (this.memory[this.pc] << 8) | this.memory[this.pc + 1]
+    console.log(
+      `Step: PC=${this.pc.toString(16).padStart(4, '0')}, Opcode=0x${opcode
+        .toString(16)
+        .padStart(4, '0')}`
+    )
+
     this.execute(opcode)
     this.pc += 2
 
@@ -142,10 +148,17 @@ class Chip8Emulator {
     const nn = opcode & 0x00ff
     const nnn = opcode & 0x0fff
 
+    console.log(
+      `Executing opcode: 0x${opcode.toString(16).padStart(4, '0')} at PC: 0x${this.pc
+        .toString(16)
+        .padStart(4, '0')}`
+    )
+
     switch (opcode & 0xf000) {
       case 0x0000:
         if (opcode === 0x00e0) this.clearScreen()
         else if (opcode === 0x00ee) this.ret()
+        else console.log(`Unknown opcode: 0x${opcode.toString(16).padStart(4, '0')}`)
         break
       case 0x1000:
         this.pc = nnn
@@ -192,6 +205,8 @@ class Chip8Emulator {
       case 0xf000:
         this.executeFxy(opcode, x, nn)
         break
+      default:
+        console.log(`Unhandled opcode: 0x${opcode.toString(16).padStart(4, '0')}`)
     }
   }
 
@@ -328,7 +343,9 @@ class Chip8Emulator {
   }
 
   waitForKey(x) {
-    // Implementation for key waiting
+    // For now, just continue without waiting
+    // This is a simplified implementation
+    console.log(`Waiting for key in register ${x}`)
   }
 
   storeBCD(x) {
@@ -361,14 +378,14 @@ class Chip8Emulator {
 
 // ROM data - converted from actual ROM files
 const ROMS = {
-  MAZE: MAZE_ROM,
-  PONG: PONG_ROM,
-  TETRIS: TETRIS_ROM,
-  INVADERS: INVADERS_ROM,
-  BLINKY: BLINKY_ROM,
-  '15PUZZLE': PUZZLE15_ROM,
-  CONNECT4: CONNECT4_ROM,
-  GUESS: GUESS_ROM
+  MAZE: typeof MAZE_ROM !== 'undefined' ? MAZE_ROM : new Uint8Array([]),
+  PONG: typeof PONG_ROM !== 'undefined' ? PONG_ROM : new Uint8Array([]),
+  TETRIS: typeof TETRIS_ROM !== 'undefined' ? TETRIS_ROM : new Uint8Array([]),
+  INVADERS: typeof INVADERS_ROM !== 'undefined' ? INVADERS_ROM : new Uint8Array([]),
+  BLINKY: typeof BLINKY_ROM !== 'undefined' ? BLINKY_ROM : new Uint8Array([]),
+  '15PUZZLE': typeof PUZZLE15_ROM !== 'undefined' ? PUZZLE15_ROM : new Uint8Array([]),
+  CONNECT4: typeof CONNECT4_ROM !== 'undefined' ? CONNECT4_ROM : new Uint8Array([]),
+  GUESS: typeof GUESS_ROM !== 'undefined' ? GUESS_ROM : new Uint8Array([])
 }
 
 // Main application
@@ -378,21 +395,47 @@ let animationId
 let lastTime = 0
 
 function init() {
+  console.log('Initializing Chip-8 Emulator...')
+  
+  // Check if ROM variables are available
+  console.log('ROM variables check:')
+  console.log('MAZE_ROM:', typeof MAZE_ROM !== 'undefined' ? 'Available' : 'Missing')
+  console.log('PONG_ROM:', typeof PONG_ROM !== 'undefined' ? 'Available' : 'Missing')
+  console.log('TETRIS_ROM:', typeof TETRIS_ROM !== 'undefined' ? 'Available' : 'Missing')
+  
   emulator = new Chip8Emulator()
+  console.log('Emulator created:', emulator)
 
   canvas = document.getElementById('screen')
   ctx = canvas.getContext('2d')
+  console.log('Canvas context:', ctx)
 
   setupEventListeners()
   render()
+  
+  console.log('Initialization complete!')
+  console.log('Available ROMs:', Object.keys(ROMS))
+  console.log('ROMS object:', ROMS)
 }
 
 function setupEventListeners() {
-  document.getElementById('load-rom').addEventListener('click', loadROM)
-  document.getElementById('start').addEventListener('click', start)
-  document.getElementById('pause').addEventListener('click', pause)
-  document.getElementById('reset').addEventListener('click', reset)
-  document.getElementById('speed').addEventListener('input', updateSpeed)
+  console.log('Setting up event listeners...')
+
+  const loadRomBtn = document.getElementById('load-rom')
+  const startBtn = document.getElementById('start')
+  const pauseBtn = document.getElementById('pause')
+  const resetBtn = document.getElementById('reset')
+  const speedSlider = document.getElementById('speed')
+
+  console.log('Found elements:', { loadRomBtn, startBtn, pauseBtn, resetBtn, speedSlider })
+
+  loadRomBtn.addEventListener('click', loadROM)
+  startBtn.addEventListener('click', start)
+  pauseBtn.addEventListener('click', pause)
+  resetBtn.addEventListener('click', reset)
+  speedSlider.addEventListener('input', updateSpeed)
+
+  console.log('Event listeners attached!')
 
   // Keyboard controls
   document.addEventListener('keydown', handleKeyDown)
@@ -409,16 +452,35 @@ function loadROM() {
   const romSelect = document.getElementById('rom-select')
   const selectedROM = romSelect.value
 
-  if (selectedROM && ROMS[selectedROM]) {
+  console.log('Loading ROM:', selectedROM)
+  console.log('Available ROMs:', Object.keys(ROMS))
+  console.log('Selected ROM data:', ROMS[selectedROM])
+
+  if (selectedROM && ROMS[selectedROM] && ROMS[selectedROM].length > 0) {
     emulator.loadROM(ROMS[selectedROM])
-    console.log(`Loaded ${selectedROM} ROM`)
+    console.log(`Loaded ${selectedROM} ROM with ${ROMS[selectedROM].length} bytes`)
+  } else {
+    console.error(`Failed to load ROM: ${selectedROM}`)
+    alert(`Failed to load ROM: ${selectedROM}. Check console for details.`)
   }
 }
 
 function start() {
+  console.log('Start button clicked!')
+
+  // Check if a ROM is loaded
+  if (emulator.pc === 0x200) {
+    console.log('No ROM loaded! Please load a ROM first.')
+    alert('Please load a ROM first before starting the emulator.')
+    return
+  }
+
   if (!emulator.running) {
     emulator.running = true
+    console.log('Starting emulator...')
     gameLoop()
+  } else {
+    console.log('Emulator already running')
   }
 }
 
@@ -443,7 +505,10 @@ function updateSpeed() {
 }
 
 function gameLoop(currentTime = 0) {
-  if (!emulator.running) return
+  if (!emulator.running) {
+    console.log('Game loop stopped - emulator not running')
+    return
+  }
 
   const deltaTime = currentTime - lastTime
   const targetTime = 1000 / (60 * emulator.speed)
@@ -471,6 +536,7 @@ function render() {
   }
 
   ctx.putImageData(imageData, 0, 0)
+  console.log('Rendered frame')
 }
 
 function handleKeyDown(event) {
@@ -535,4 +601,7 @@ function updateKeyVisual(key, pressed) {
 }
 
 // Initialize when page loads
-document.addEventListener('DOMContentLoaded', init)
+document.addEventListener('DOMContentLoaded', () => {
+  // Small delay to ensure all ROM scripts are loaded
+  setTimeout(init, 100)
+})
